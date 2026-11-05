@@ -1,0 +1,30 @@
+{
+  "name": "flood-map",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Bản đồ ngập lụt Việt Nam – hiển thị vùng ngập và dẫn đường tới nơi an toàn",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "data:flood": "node scripts/build-flood-zones.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "maplibre-gl": "^6.16.0"
+  },
+  "devDependencies": {
+    "@types/geojson": "^7946.0.16",
+    "d3-contour": "^4.0.2",
+    "pngjs": "^7.0.0",
+    "typescript": "5.9",
+    "vite": "^8.3.6",
+    "vite-plugin-pwa": "^2.0.0",
+    "vitest": "^4.0.3"
+  }
+}

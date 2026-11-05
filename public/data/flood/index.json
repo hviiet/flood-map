@@ -1,0 +1,139 @@
+{
+  "generated": "2026-11-05",
+  "kind": "scenario",
+  "source": "Mô phỏng từ DEM Terrarium (AWS Terrain Tiles – SRTM/GMTED), không phải số liệu quan trắc",
+  "depths": [
+    0,
+    0.5,
+    1,
+    2
+  ],
+  "areas": [
+    {
+      "id": "hue",
+      "name": "TP. Huế – lưu vực sông Hương",
+      "bbox": [
+        107.48,
+        16.38,
+        107.68,
+        16.54
+      ],
+      "level": 4,
+      "center": [
+        107.58,
+        16.46
+      ],
+      "floodedRatio": 0.335,
+      "file": "hue.geojson",
+      "bytes": 519077
+    },
+    {
+      "id": "hoi-an",
+      "name": "Hội An – hạ lưu sông Thu Bồn",
+      "bbox": [
+        108.26,
+        15.83,
+        108.4,
+        15.93
+      ],
+      "level": 3,
+      "center": [
+        108.33,
+        15.88
+      ],
+      "floodedRatio": 0.275,
+      "file": "hoi-an.geojson",
+      "bytes": 69881
+    },
+    {
+      "id": "da-nang",
+      "name": "Đà Nẵng – Hòa Vang, Cẩm Lệ",
+      "bbox": [
+        108.12,
+        15.97,
+        108.26,
+        16.09
+      ],
+      "level": 3.5,
+      "center": [
+        108.19,
+        16.03
+      ],
+      "floodedRatio": 0.211,
+      "file": "da-nang.geojson",
+      "bytes": 148425
+    },
+    {
+      "id": "ha-noi",
+      "name": "Hà Nội – nội thành",
+      "bbox": [
+        105.76,
+        20.95,
+        105.92,
+        21.08
+      ],
+      "level": 8.5,
+      "center": [
+        105.84,
+        21.015
+      ],
+      "floodedRatio": 0.319,
+      "file": "ha-noi.geojson",
+      "bytes": 508962
+    },
+    {
+      "id": "hcm",
+      "name": "TP. Hồ Chí Minh",
+      "bbox": [
+        106.62,
+        10.7,
+        106.8,
+        10.86
+      ],
+      "level": 2.2,
+      "center": [
+        106.71,
+        10.78
+      ],
+      "floodedRatio": 0.355,
+      "file": "hcm.geojson",
+      "bytes": 1020304
+    },
+    {
+      "id": "can-tho",
+      "name": "Cần Thơ – Ninh Kiều, Cái Răng",
+      "bbox": [
+        105.7,
+        9.98,
+        105.84,
+        10.08
+      ],
+      "level": 1.7,
+      "center": [
+        105.77,
+        10.03
+      ],
+      "floodedRatio": 0.441,
+      "file": "can-tho.geojson",
+      "bytes": 650961
+    },
+    {
+      "id": "le-thuy",
+      "name": "Lệ Thủy, Quảng Trị – sông Kiến Giang",
+      "bbox": [
+        106.72,
+        17.12,
+        106.88,
+        17.26
+      ],
+      "level": 4,
+      "center": [
+        106.8,
+        17.19
+      ],
+      "floodedRatio": 0.258,
+      "file": "le-thuy.geojson",
+      "bytes": 280426
+    }
+  ]
+}
