@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
+    <title>Bản đồ ngập lụt Việt Nam</title>
+    <meta name="description" content="Xem vùng ngập lụt chi tiết và được dẫn đường tới nơi an toàn (vùng cao hơn) gần nhất." />
+    <meta name="theme-color" content="#0b3d91" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="icon" href="./icons/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./icons/icon.svg" />
+    <!-- Mở kết nối sớm tới máy chủ bản đồ / độ cao / định tuyến -->
+    <link rel="preconnect" href="https://tiles.openfreemap.org" crossorigin />
+    <link rel="preconnect" href="https://s3.amazonaws.com" crossorigin />
+    <link rel="dns-prefetch" href="https://routing.openstreetmap.de" />
+    <!-- Tải style nền song song với JS -->
+    <link rel="preload" href="https://tiles.openfreemap.org/styles/liberty" as="fetch" crossorigin />
+    <link rel="preload" href="./data/flood/index.json" as="fetch" crossorigin />
+    <script type="module" crossorigin src="./assets/index-DD_zJj4Z.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/maplibre-Bg7uz6NO.js">
+    <link rel="stylesheet" crossorigin href="./assets/maplibre-qvkd0SPb.css">
+    <link rel="stylesheet" crossorigin href="./assets/index-DyRFsY4T.css">
+  <link rel="manifest" href="./manifest.webmanifest"></head>
+  <body>
+    <div id="map" role="application" aria-label="Bản đồ ngập lụt"></div>
+    <div id="boot" class="boot" aria-hidden="true"><img class="boot-logo" src="./icons/icon.svg" alt="" width="54" height="54" /><span>Đang tải bản đồ…</span></div>
+
+    <!-- Thanh trên -->
+    <header class="topbar">
+      <div class="brand">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c-3.9 0-7 3.1-7 7 0 5.3 7 13 7 13s7-7.7 7-13c0-3.9-3.1-7-7-7z" fill="currentColor"/><path d="M3 21c2 0 2-1 4-1s2 1 4 1 2-1 4-1 2 1 4 1 2-1 2-1" stroke="#5ec8ff" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+        <div><strong>Ngập lụt VN</strong><small id="scenario-chip">Kịch bản mô phỏng</small></div>
+      </div>
+      <button class="icon-btn" id="btn-layers" aria-label="Lớp bản đồ" aria-expanded="false" aria-controls="layers-panel">
+        <svg viewBox="0 0 24 24"><path d="M12 3 2 8l10 5 10-5-10-5zm-8.2 9L2 13l10 5 10-5-1.8-1L12 16l-8.2-4zm0 4L2 17l10 5 10-5-1.8-1L12 20l-8.2-4z" fill="currentColor"/></svg>
+      </button>
+    </header>
+
+    <!-- Bảng chỉ dẫn khi dẫn đường -->
+    <section id="nav-banner" class="nav-banner" hidden aria-live="polite">
+      <div class="nav-icon" id="nav-icon"></div>
+      <div class="nav-text">
+        <div class="nav-dist" id="nav-dist"></div>
+        <div class="nav-instr" id="nav-instr"></div>
+      </div>
+    </section>
+
+    <!-- Nút nổi -->
+    <div class="fab-col">
+      <button class="icon-btn" id="btn-compass" aria-label="Hướng bắc" hidden>
+        <svg viewBox="0 0 24 24" id="compass-needle"><path d="M12 2 8 12h8z" fill="#e03131"/><path d="M12 22l4-10H8z" fill="#868e96"/></svg>
+      </button>
+      <button class="icon-btn" id="btn-locate" aria-label="Vị trí của tôi">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2" fill="currentColor"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="12" r="7" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+      </button>
+    </div>
+
+    <!-- Bảng lớp bản đồ -->
+    <aside id="layers-panel" class="panel" hidden>
+      <div class="panel-head"><h2>Lớp bản đồ</h2><button class="close" data-close aria-label="Đóng">×</button></div>
+      <label class="row toggle"><span><b>Vùng ngập</b><small>Theo độ sâu, 7 khu vực trọng điểm</small></span><input type="checkbox" id="tg-flood" checked /></label>
+      <div class="legend" id="legend"></div>
+      <label class="row toggle"><span><b>Mô phỏng mực nước</b><small>Tô vùng thấp hơn mực nước chọn (toàn quốc)</small></span><input type="checkbox" id="tg-sim" /></label>
+      <div class="sim" id="sim-box" hidden>
+        <input type="range" id="sim-level" min="0" max="20" step="0.5" value="5" aria-label="Mực nước mô phỏng" />
+        <output id="sim-out">5,0 m</output>
+      </div>
+      <label class="row toggle"><span><b>Địa hình</b><small>Bóng đổi địa hình (hillshade)</small></span><input type="checkbox" id="tg-hill" /></label>
+      <label class="row toggle"><span><b>Giọng nói chỉ đường</b><small id="voice-note">Tiếng Việt</small></span><input type="checkbox" id="tg-voice" checked /></label>
+      <p class="note">⚠️ Dữ liệu vùng ngập hiện là <b>kịch bản mô phỏng</b> tính từ mô hình độ cao (DEM), không phải số liệu quan trắc thời gian thực. Luôn tuân theo hướng dẫn của chính quyền địa phương.</p>
+      <p class="note small">Bản đồ nền © OpenStreetMap, OpenFreeMap · Định tuyến: OSRM (FOSSGIS) · Độ cao: AWS Terrain Tiles.</p>
+    </aside>
+
+    <!-- Bảng dưới -->
+    <section id="sheet" class="sheet" aria-live="polite">
+      <div class="grip" aria-hidden="true"></div>
+      <div id="sheet-body"></div>
+    </section>
+
+    <div id="toast" class="toast" role="status" hidden></div>
+  </body>
+</html>
