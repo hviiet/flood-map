@@ -10,7 +10,8 @@ import { route as osrmRoute, type TravelMode } from './routing/osrm';
 import { instructionVi, maneuverIcon, spokenVi } from './routing/instructions';
 import { RouteNavigator, type Fix, type NavState } from './nav/navigator';
 import { LocationService } from './nav/location';
-import { hasVietnameseVoice, isVoiceEnabled, setVoiceEnabled, speak, vibrate, voiceSupported } from './nav/voice';
+import { currentVoiceUri, getVoiceRate, hasVietnameseVoice, isVoiceEnabled, listVietnameseVoices, onVoicesChanged, setVoice, setVoiceEnabled, setVoiceRate, speak, stop as stopSpeech, testVoice, vibrate, voiceSupported } from './nav/voice';
+import { spokenDistance } from './nav/speech-text';
 import { $, esc, rafThrottle, setSheet, toast } from './ui/dom';
 import { ICON, MANEUVER_SVG } from './ui/icons';
 
@@ -21,6 +22,20 @@ const store = {
   get: (k: string) => { try { return localStorage.getItem(k); } catch { return null; } },
   set: (k: string, v: string) => { try { localStorage.setItem(k, v); } catch { /* private mode */ } },
 };
+
+/** Hướng dẫn cài giọng đọc tiếng Việt theo hệ điều hành. */
+function installGuide(): string {
+  const ua = navigator.userAgent;
+  if (/iPhone|iPad|iPod|Macintosh/.test(ua) && 'ontouchend' in document)
+    return 'Cài đặt → Trợ năng → Nội dung được đọc → Giọng nói → Tiếng Việt → tải giọng "Linh (Nâng cao)", rồi tải lại trang.';
+  if (/Android/.test(ua))
+    return 'Cài đặt → Hệ thống → Ngôn ngữ → Chuyển văn bản thành lời nói → Công cụ của Google → Cài đặt dữ liệu giọng nói → Tiếng Việt, rồi tải lại trang.';
+  if (/Mac OS X/.test(ua))
+    return 'Cài đặt hệ thống → Trợ năng → Nội dung được đọc → Giọng hệ thống → Quản lý giọng → Tiếng Việt (Linh).';
+  if (/Windows/.test(ua))
+    return 'Dùng trình duyệt Edge (có sẵn giọng HoaiMy/NamMinh rất rõ), hoặc Cài đặt → Thời gian & ngôn ngữ → Giọng nói → Thêm giọng → Tiếng Việt.';
+  return 'cài gói giọng nói Tiếng Việt trong cài đặt hệ điều hành, rồi tải lại trang.';
+}
 
 export class App {
   private phase: Phase = 'idle';
@@ -134,12 +149,7 @@ export class App {
     };
     slider.onchange = () => this.refreshInfo(true);
 
-    const voice = $<HTMLInputElement>('tg-voice');
-    voice.checked = store.get('voice') !== '0';
-    setVoiceEnabled(voice.checked);
-    if (!voiceSupported()) { voice.disabled = true; $('voice-note').textContent = 'Trình duyệt không hỗ trợ'; }
-    else setTimeout(() => { if (!hasVietnameseVoice()) $('voice-note').textContent = 'Thiết bị chưa có giọng tiếng Việt – sẽ dùng giọng mặc định'; }, 1500);
-    voice.onchange = () => { setVoiceEnabled(voice.checked); store.set('voice', voice.checked ? '1' : '0'); };
+    this.bindVoiceSettings();
 
     $('btn-locate').onclick = () => this.locate(true);
     $('btn-compass').onclick = () => this.map.easeTo({ bearing: 0, pitch: 0, duration: 400 });
@@ -166,6 +176,66 @@ export class App {
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible' && this.phase === 'navigating') this.requestWakeLock();
     });
+  }
+
+  private bindVoiceSettings() {
+    const toggle = $<HTMLInputElement>('tg-voice');
+    const box = $('voice-box');
+    const select = $<HTMLSelectElement>('voice-select');
+    const help = $('voice-help');
+    toggle.checked = store.get('voice') !== '0';
+    setVoiceEnabled(toggle.checked);
+    toggle.onchange = () => {
+      setVoiceEnabled(toggle.checked);
+      store.set('voice', toggle.checked ? '1' : '0');
+      box.hidden = !toggle.checked || !hasVietnameseVoice();
+    };
+    if (!voiceSupported()) {
+      toggle.checked = false;
+      toggle.disabled = true;
+      box.hidden = true;
+      $('voice-note').textContent = 'Trình duyệt không hỗ trợ đọc văn bản';
+      return;
+    }
+
+    const render = () => {
+      const voices = listVietnameseVoices();
+      if (!voices.length) {
+        $('voice-note').textContent = 'Thiết bị chưa có giọng tiếng Việt';
+        box.hidden = false;
+        select.parentElement!.hidden = true;
+        $('voice-rate').hidden = true;
+        help.hidden = false;
+        help.textContent = `Chỉ dẫn sẽ hiện bằng chữ và rung. Để nghe đọc rõ: ${installGuide()}`;
+        return;
+      }
+      $('voice-note').textContent = 'Tiếng Việt';
+      select.parentElement!.hidden = false;
+      $('voice-rate').hidden = false;
+      help.hidden = true;
+      box.hidden = !toggle.checked;
+      const cur = currentVoiceUri();
+      select.innerHTML = voices
+        .map((v, i) => `<option value="${esc(v.uri)}"${v.uri === cur ? ' selected' : ''}>${i === 0 ? '★ ' : ''}${esc(v.label)}</option>`)
+        .join('');
+    };
+    const markRate = () => {
+      const r = getVoiceRate();
+      $('voice-rate').querySelectorAll<HTMLButtonElement>('button').forEach((b) =>
+        b.setAttribute('aria-pressed', String(Math.abs(+b.dataset.rate! - r) < 0.04)));
+    };
+    render();
+    markRate();
+    onVoicesChanged(render);
+    select.onchange = () => { setVoice(select.value); testVoice(); };
+    $('voice-test').onclick = () => testVoice();
+    $('voice-rate').onclick = (e) => {
+      const b = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-rate]');
+      if (!b) return;
+      setVoiceRate(+b.dataset.rate!);
+      markRate();
+      testVoice();
+    };
   }
 
   private bindMap() {
@@ -516,7 +586,10 @@ export class App {
     // Live GPS is required for guidance unless the user picked a manual start point.
     if (!this.loc.manual) this.loc.start().catch(() => {});
     const first = opt.route ? this.nav!.steps[1] : null;
-    speak(`Bắt đầu dẫn đường đến vùng cao an toàn, cách ${formatDistance(opt.route?.distance ?? opt.spot.distance)}.${first ? ' ' + instructionVi(first) : ''}`, true);
+    const spoke = speak(`Bắt đầu dẫn đường đến vùng cao an toàn, cách ${spokenDistance(opt.route?.distance ?? opt.spot.distance)}.${first ? ' ' + spokenVi(first, null) : ''}`, true);
+    if (!spoke && isVoiceEnabled() && voiceSupported() && !hasVietnameseVoice()) {
+      toast('Máy chưa có giọng đọc tiếng Việt – chỉ dẫn bằng chữ và rung. Xem cách cài trong mục Lớp bản đồ.', 6000);
+    }
     this.renderNavSheet();
     if (this.loc.last) this.onNavFix(this.loc.last);
   }
@@ -583,7 +656,10 @@ export class App {
       setData(this.map, 'route', lineFeature(sliceFrom(this.nav.line, state.along), { kind: 'road' }));
       if (state.announce) {
         const a = state.announce;
-        speak(spokenVi(a.step, a.distance), a.stage === 'now');
+        if (a.step.maneuver.type === 'arrive') {
+          // Lời báo đến nơi đọc riêng khi tới; ở đây chỉ báo trước một lần.
+          if (a.stage !== 'now' && (a.distance ?? 0) > 30) speak(`Sắp đến vùng cao an toàn, còn ${spokenDistance(a.distance ?? 0)}.`);
+        } else speak(spokenVi(a.step, a.distance), a.stage === 'now');
         if (a.stage !== 'far') vibrate(a.stage === 'now' ? [80, 60, 80] : 60);
       }
       if (state.arrived) return this.arrive();
@@ -635,7 +711,7 @@ export class App {
       opt.route = r;
       this.nav = new RouteNavigator(r, this.mode);
       const first = this.nav.steps[1];
-      if (first) speak(instructionVi(first));
+      if (first) speak(spokenVi(first, null));
     } catch {
       toast('Mất kết nối – tạm chỉ hướng đi thẳng tới điểm an toàn.');
       this.nav = null;
@@ -662,7 +738,7 @@ export class App {
   private stopNav() {
     this.wakeLock?.release().catch(() => {});
     this.wakeLock = null;
-    if ('speechSynthesis' in window) speechSynthesis.cancel();
+    stopSpeech();
     $('nav-banner').hidden = true;
     document.body.classList.remove('navigating');
     this.map.easeTo({ pitch: 0, bearing: 0, duration: 600 });

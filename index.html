@@ -64,6 +64,18 @@
       </div>
       <label class="row toggle"><span><b>Địa hình</b><small>Bóng đổi địa hình (hillshade)</small></span><input type="checkbox" id="tg-hill" /></label>
       <label class="row toggle"><span><b>Giọng nói chỉ đường</b><small id="voice-note">Tiếng Việt</small></span><input type="checkbox" id="tg-voice" checked /></label>
+      <div class="voice-box" id="voice-box">
+        <div class="voice-row">
+          <select id="voice-select" aria-label="Chọn giọng đọc"></select>
+          <button type="button" id="voice-test" class="pill">▶ Nghe thử</button>
+        </div>
+        <div class="seg seg-3" role="group" aria-label="Tốc độ đọc" id="voice-rate">
+          <button type="button" data-rate="0.82">Chậm</button>
+          <button type="button" data-rate="0.95">Vừa</button>
+          <button type="button" data-rate="1.1">Nhanh</button>
+        </div>
+        <p class="note small" id="voice-help" hidden></p>
+      </div>
       <p class="note">⚠️ Dữ liệu vùng ngập hiện là <b>kịch bản mô phỏng</b> tính từ mô hình độ cao (DEM), không phải số liệu quan trắc thời gian thực. Luôn tuân theo hướng dẫn của chính quyền địa phương.</p>
       <p class="note small">Bản đồ nền © OpenStreetMap, OpenFreeMap · Định tuyến: OSRM (FOSSGIS) · Độ cao: AWS Terrain Tiles.</p>
     </aside>

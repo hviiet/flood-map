@@ -1,4 +1,5 @@
 import type { OsrmStep } from './osrm';
+import { normalizeRoadName, spokenDistance } from '../nav/speech-text';
 
 const MOD: Record<string, string> = {
   left: 'rẽ trái',
@@ -88,10 +89,14 @@ export function instructionVi(step: OsrmStep, destName = 'điểm an toàn'): st
   }
 }
 
-/** Spoken prompt, e.g. "Sau 200 mét, rẽ trái vào Lê Lợi". */
+/** Spoken prompt, e.g. "Sau 200 mét, rẽ trái vào Lê Lợi" – with road names expanded for TTS. */
 export function spokenVi(step: OsrmStep, distance: number | null, destName?: string): string {
-  const text = instructionVi(step, destName);
-  if (distance === null || distance < 25) return text;
-  const rounded = distance >= 1000 ? `${(Math.round(distance / 100) / 10).toString().replace('.', ' phẩy ')} ki lô mét` : `${Math.round(distance / 10) * 10} mét`;
-  return `Sau ${rounded}, ${text.charAt(0).toLowerCase()}${text.slice(1)}`;
+  const spokenStep: OsrmStep = {
+    ...step,
+    name: step.name ? normalizeRoadName(step.name) : step.name,
+    ref: step.ref ? normalizeRoadName(step.ref) : step.ref,
+  };
+  const text = instructionVi(spokenStep, destName);
+  if (distance === null || distance < 25) return `${text}.`;
+  return `Sau ${spokenDistance(distance)}, ${text.charAt(0).toLowerCase()}${text.slice(1)}.`;
 }

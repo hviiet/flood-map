@@ -19,8 +19,9 @@ describe('instructionVi', () => {
     expect(instructionVi(step('end of road', 'right', 'Hùng Vương', 0, [0, 0]))).toBe('Cuối đường, rẽ phải vào Hùng Vương');
   });
   it('speaks distances', () => {
-    expect(spokenVi(step('turn', 'right', 'Bà Triệu', 0, [0, 0]), 148)).toBe('Sau 150 mét, rẽ phải vào Bà Triệu');
-    expect(spokenVi(step('turn', 'right', '', 0, [0, 0]), 1500)).toBe('Sau 1 phẩy 5 ki lô mét, rẽ phải');
+    expect(spokenVi(step('turn', 'right', 'Bà Triệu', 0, [0, 0]), 148)).toBe('Sau 150 mét, rẽ phải vào Bà Triệu.');
+    expect(spokenVi(step('turn', 'left', 'QL.1A', 0, [0, 0]), 430)).toBe('Sau 450 mét, rẽ trái vào Quốc lộ 1 A.');
+    expect(spokenVi(step('turn', 'right', '', 0, [0, 0]), 1500)).toBe('Sau 1 phẩy 5 ki lô mét, rẽ phải.');
   });
 });
 
